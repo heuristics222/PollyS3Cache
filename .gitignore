@@ -1,0 +1,5 @@
+.*
+!.gitignore
+*egg-info
+cdk.out
+__pycache__
