@@ -3,7 +3,7 @@ from aws_cdk.aws_cloudfront import BehaviorOptions, CfnDistribution, CfnOriginAc
 from aws_cdk.aws_cloudfront_origins import HttpOrigin, OriginGroup, S3Origin
 from aws_cdk.aws_lambda import Code, Function, FunctionUrlAuthType, Runtime, Version
 from aws_cdk.aws_iam import Role, PolicyDocument, ServicePrincipal, PolicyStatement, Effect, ManagedPolicy
-from aws_cdk.aws_s3 import BlockPublicAccess, Bucket
+from aws_cdk.aws_s3 import BlockPublicAccess, Bucket, LifecycleRule
 from constructs import Construct
 
 import logging
@@ -30,8 +30,15 @@ class PollyStack(Stack):
         function = self.createLambda('PollyFunction', "PollyFunction.handler")
         functionUrl = function.add_function_url(auth_type=FunctionUrlAuthType.NONE)
 
-        bucket = Bucket(self, 'polly-bucket', bucket_name=f'polly-bucket-{self.region}-{self.account}',
-                        block_public_access=BlockPublicAccess.BLOCK_ALL)
+        bucket = Bucket(self, 'polly-bucket',
+            bucket_name=f'polly-bucket-{self.region}-{self.account}',
+            block_public_access=BlockPublicAccess.BLOCK_ALL,
+            lifecycle_rules=[
+                LifecycleRule(
+                    expiration=Duration.days(30),
+                ),
+            ],
+        )
         bucket.grant_write(function)
 
         origin = S3Origin(
@@ -75,7 +82,8 @@ class PollyStack(Stack):
             handler=handlerName,
             role=self.lambdaRole,
             # layers=[self.lambdaLayer],
-            timeout=Duration.seconds(10)
+            timeout=Duration.seconds(10),
+            reserved_concurrent_executions=1,
         )
 
     def createLambdaRole(self):
