@@ -1,7 +1,7 @@
 from aws_cdk import Duration, Fn, Stack, LegacyStackSynthesizer
-from aws_cdk.aws_cloudfront import BehaviorOptions, CfnDistribution, CfnOriginAccessControl, CfnOriginAccessControlProps, Distribution, EdgeLambda, ErrorResponse, LambdaEdgeEventType, OriginAccessIdentity, ViewerProtocolPolicy
+from aws_cdk.aws_cloudfront import BehaviorOptions, Distribution, ViewerProtocolPolicy
 from aws_cdk.aws_cloudfront_origins import HttpOrigin, OriginGroup, S3Origin
-from aws_cdk.aws_lambda import Code, Function, FunctionUrlAuthType, Runtime, Version
+from aws_cdk.aws_lambda import Code, Function, FunctionUrlAuthType, Runtime
 from aws_cdk.aws_iam import Role, PolicyDocument, ServicePrincipal, PolicyStatement, Effect, ManagedPolicy
 from aws_cdk.aws_s3 import BlockPublicAccess, Bucket, LifecycleRule
 from constructs import Construct
@@ -17,15 +17,8 @@ class PollyStack(Stack):
             synthesizer=LegacyStackSynthesizer(),
             **kwargs)
         codeLocation = 'lambdas'
-        # layerLocation = self.installRequirements(codeLocation)
         self.lambdaCode = Code.from_asset(codeLocation)
         self.lambdaRole = self.createLambdaRole()
-        # self.lambdaLayer = lambda_.LayerVersion(self, 'lambdaLayer',
-        #     code=lambda_.Code.from_asset(layerLocation),
-        #     compatible_runtimes=[
-        #         lambda_.Runtime.PYTHON_3_8
-        #     ]
-        # )
 
         function = self.createLambda('PollyFunction', "PollyFunction.handler")
         functionUrl = function.add_function_url(auth_type=FunctionUrlAuthType.NONE)
@@ -53,25 +46,6 @@ class PollyStack(Stack):
                 ),
                 viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
             ),
-            # error_responses=[
-            #     ErrorResponse(
-            #         http_status=403,
-            #         response_http_status=403,
-            #         response_page_path="/error"
-            #     )
-            # ],
-            # additional_behaviors={
-            #     "/error": BehaviorOptions(
-            #         origin=,
-            #         viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY,
-            #         # edge_lambdas=[
-            #         #     EdgeLambda(
-            #         #         event_type=LambdaEdgeEventType.ORIGIN_REQUEST,
-            #         #         function_version=function.current_version
-            #         #     )
-            #         # ]
-            #     )
-            # }
         )
         logger.info(distribution.node)
 
@@ -81,7 +55,6 @@ class PollyStack(Stack):
             runtime=Runtime.PYTHON_3_8,
             handler=handlerName,
             role=self.lambdaRole,
-            # layers=[self.lambdaLayer],
             timeout=Duration.seconds(10),
             reserved_concurrent_executions=1,
         )

@@ -17,7 +17,7 @@ def handler(event, context):
 
     if len(split) == 2:
         text = split[1]
-        if len(text) < 10:
+        if len(text) < 15:
             pollyResponse = pollyClient.synthesize_speech(
                 Engine='standard',
                 LanguageCode='ko-KR',
