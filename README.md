@@ -80,3 +80,27 @@ yawsso
  * `cdk deploy --profile dev2`      deploy this stack to your default AWS account/region
  * `cdk diff --profile dev2`        compare deployed stack with current state
  * `cdk docs`                       open CDK documentation
+
+## Rust build
+
+One time setup
+* Install [cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html)
+* Install cargo-lambda in python venv `pip3 install cargo-lambda`
+* Install zig in python env `pip3 install ziglang`
+
+Every new terminal 😒
+* Zig doesn't set up the path correctly, so run
+    * `source .zigpath`
+
+Building
+* cd to the function dir
+    * `cd PollyFunction`
+* build
+    * `cargo lambda build --release`
+* or debug
+    * `cargo lambda watch`
+    * `cargo lambda invoke PollyFunction --data-ascii '{}'`
+
+## Troubleshooting
+### (Windows) failed to run custom build command for `ring v0.16.20` ... error occurred: Failed to find tool. Is `ar` installed?
+If the rust build cannot find `ar`, you have to get it and copy the executable over to `~/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/` for example.  One way to get `ar.exe` is from the msys2 mingw-w64-x86_64-binutils package.

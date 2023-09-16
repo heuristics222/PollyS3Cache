@@ -23,6 +23,9 @@ class PollyStack(Stack):
         function = self.createLambda('PollyFunction', "PollyFunction.handler")
         functionUrl = function.add_function_url(auth_type=FunctionUrlAuthType.NONE)
 
+        rustFunction = self.createRustLambda('RustPollyFunction')
+        rustFunctionUrl = rustFunction.add_function_url(auth_type=FunctionUrlAuthType.NONE)
+
         bucket = Bucket(self, 'polly-bucket',
             bucket_name=f'polly-bucket-{self.region}-{self.account}',
             block_public_access=BlockPublicAccess.BLOCK_ALL,
@@ -46,6 +49,16 @@ class PollyStack(Stack):
                 ),
                 viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
             ),
+            additional_behaviors={
+                "rust/*": BehaviorOptions(
+                    origin=OriginGroup(
+                        primary_origin=origin,
+                        fallback_origin=HttpOrigin(Fn.select(2, Fn.split("/", rustFunctionUrl.url))),
+                        fallback_status_codes=[403]
+                    ),
+                    viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
+                )
+            }
         )
         logger.info(distribution.node)
 
@@ -54,6 +67,16 @@ class PollyStack(Stack):
             code=self.lambdaCode,
             runtime=Runtime.PYTHON_3_8,
             handler=handlerName,
+            role=self.lambdaRole,
+            timeout=Duration.seconds(10),
+            reserved_concurrent_executions=1,
+        )
+
+    def createRustLambda(self, functionName):
+        return Function(self, functionName,
+            code=Code.from_asset('PollyFunction/target/lambda/PollyFunction'),
+            runtime=Runtime.PROVIDED_AL2,
+            handler="empty",
             role=self.lambdaRole,
             timeout=Duration.seconds(10),
             reserved_concurrent_executions=1,
