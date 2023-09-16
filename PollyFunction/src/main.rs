@@ -16,7 +16,7 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
 
     let resp;
 
-    if translation.len() < 15 {
+    if translation.chars().count() < 15 {
         let result = pollyClient.synthesize_speech()
             .engine(polly::types::Engine::Standard)
             .language_code(polly::types::LanguageCode::KoKr)
