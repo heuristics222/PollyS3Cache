@@ -101,6 +101,22 @@ Building
     * `cargo lambda watch`
     * `cargo lambda invoke PollyFunction --data-ascii '{}'`
 
+## Rust vs Python lambda
+I measured the runtime of lambda executions using the rust and python variants of this function.  Some executions were cold starts.
+
+### Python
+---
+| p01 | p25 | p50 | p90 | p99 | count |
+| --- | --- | --- | --- | --- | --- |
+| 95.8437 | 238.7132 | 264.0695 | 413.2235 | 594.5511 | 221 |
+---
+### Rust
+---
+| p01 | p25 | p50 | p90 | p99 | count |
+| --- | --- | --- | --- | --- | --- |
+| 52.406 | 91.4454 | 113.708 | 279.8303 | 351.8022 | 158 |
+---
+
 ## Troubleshooting
 ### (Windows) failed to run custom build command for `ring v0.16.20` ... error occurred: Failed to find tool. Is `ar` installed?
 If the rust build cannot find `ar`, you have to get it and copy the executable over to `~/.rustup/toolchains/stable-x86_64-pc-windows-gnu/bin/` for example.  One way to get `ar.exe` is from the msys2 mingw-w64-x86_64-binutils package.

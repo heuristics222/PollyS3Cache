@@ -31,7 +31,7 @@ class PollyStack(Stack):
             block_public_access=BlockPublicAccess.BLOCK_ALL,
             lifecycle_rules=[
                 LifecycleRule(
-                    expiration=Duration.days(30),
+                    expiration=Duration.days(90),
                 ),
             ],
         )
@@ -44,21 +44,11 @@ class PollyStack(Stack):
             default_behavior=BehaviorOptions(
                 origin=OriginGroup(
                     primary_origin=origin,
-                    fallback_origin=HttpOrigin(Fn.select(2, Fn.split("/", functionUrl.url))),
+                    fallback_origin=HttpOrigin(Fn.select(2, Fn.split("/", rustFunctionUrl.url))),
                     fallback_status_codes=[403]
                 ),
                 viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
             ),
-            additional_behaviors={
-                "rust/*": BehaviorOptions(
-                    origin=OriginGroup(
-                        primary_origin=origin,
-                        fallback_origin=HttpOrigin(Fn.select(2, Fn.split("/", rustFunctionUrl.url))),
-                        fallback_status_codes=[403]
-                    ),
-                    viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
-                )
-            }
         )
         logger.info(distribution.node)
 

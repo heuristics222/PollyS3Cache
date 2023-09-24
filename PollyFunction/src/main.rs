@@ -31,7 +31,7 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
         s3Client
             .put_object()
             .bucket("polly-bucket-us-west-2-434623153115")
-            .key(format!("rust/{translation}"))
+            .key(format!("{translation}"))
             .body(ByteStream::from(bytes.clone()))
             .send()
             .await?;
