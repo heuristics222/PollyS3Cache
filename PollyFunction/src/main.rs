@@ -1,5 +1,7 @@
 // Because snake case is the worst
 #![allow(nonstandard_style)]
+use std::time::Instant;
+
 use aws_config as config;
 use aws_sdk_polly as polly;
 use aws_sdk_s3 as s3;
@@ -17,6 +19,7 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
     let resp;
 
     if translation.chars().count() < 15 {
+        let mut now = Instant::now();
         let result = pollyClient.synthesize_speech()
             .engine(polly::types::Engine::Standard)
             .language_code(polly::types::LanguageCode::KoKr)
@@ -28,6 +31,10 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
 
         let bytes = result.audio_stream.collect().await?.to_vec();
 
+        let mut duration = now.elapsed().as_millis();
+        now = Instant::now();
+        tracing::info!("SynthesizeSpeech time: {duration}ms");
+
         s3Client
             .put_object()
             .bucket("polly-bucket-us-west-2-434623153115")
@@ -35,6 +42,9 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
             .body(ByteStream::from(bytes.clone()))
             .send()
             .await?;
+
+        duration = now.elapsed().as_millis();
+        tracing::info!("PutObject time: {duration}ms");
 
         resp = Response::builder()
             .status(200)
