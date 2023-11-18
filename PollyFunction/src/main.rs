@@ -10,9 +10,26 @@ use polly::primitives::ByteStream;
 use urlencoding::decode;
 
 async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event: Request) -> Result<Response<Body>, Error> {
-    let path = decode(event.uri().path())?;
-    let split: Vec<&str> = path.split("/").collect();
-    let translation = *split.last().unwrap();
+    let uri = event.uri();
+    tracing::info!("uri {uri}");
+    let path = decode(uri.path())?;
+    let query = uri.query();
+
+    let pathSplit: Vec<&str> = path.split("/").collect();
+    let translation = *pathSplit.last().unwrap();
+    let mut cache = true;
+
+    if query.is_some() {
+        let querystr = decode(query.unwrap()).unwrap();
+        let kv = querystring::querify(&querystr);
+
+        for (k,v) in kv.iter() {
+            tracing::info!("query param {k}={v}");
+            if &"cache" == k {
+                cache = &"1" == v;
+            }
+        }
+    }
 
     tracing::info!("pollyHandler invoked with {translation}");
 
@@ -24,7 +41,7 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
             .engine(polly::types::Engine::Standard)
             .language_code(polly::types::LanguageCode::KoKr)
             .output_format(polly::types::OutputFormat::Mp3)
-            .text(translation.clone())
+            .text(translation)
             .voice_id(polly::types::VoiceId::Seoyeon)
             .send()
             .await?;
@@ -35,16 +52,18 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
         now = Instant::now();
         tracing::info!("SynthesizeSpeech time: {duration}ms");
 
-        s3Client
-            .put_object()
-            .bucket("polly-bucket-us-west-2-434623153115")
-            .key(format!("{translation}"))
-            .body(ByteStream::from(bytes.clone()))
-            .send()
-            .await?;
+        if cache {
+            s3Client
+                .put_object()
+                .bucket("polly-bucket-us-west-2-434623153115")
+                .key(format!("{translation}"))
+                .body(ByteStream::from(bytes.clone()))
+                .send()
+                .await?;
 
-        duration = now.elapsed().as_millis();
-        tracing::info!("PutObject time: {duration}ms");
+            duration = now.elapsed().as_millis();
+            tracing::info!("PutObject time: {duration}ms");
+        }
 
         resp = Response::builder()
             .status(200)

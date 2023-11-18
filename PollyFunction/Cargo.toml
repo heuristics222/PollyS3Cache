@@ -20,6 +20,7 @@ aws-sdk-polly = "0.30.0"
 aws-sdk-s3 = "0.30.0"
 lambda_http = "0.8.1"
 lambda_runtime = "0.8.1"
+querystring = "1.1.0"
 tokio = { version = "1", features = ["macros"] }
 tracing = { version = "0.1", features = ["log"] }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt"] }

@@ -1,5 +1,5 @@
 from aws_cdk import Duration, Fn, Stack, LegacyStackSynthesizer
-from aws_cdk.aws_cloudfront import BehaviorOptions, Distribution, ViewerProtocolPolicy
+from aws_cdk.aws_cloudfront import BehaviorOptions, Distribution, OriginRequestPolicy, OriginRequestQueryStringBehavior, ViewerProtocolPolicy
 from aws_cdk.aws_cloudfront_origins import HttpOrigin, OriginGroup, S3Origin
 from aws_cdk.aws_lambda import Code, Function, FunctionUrlAuthType, Runtime
 from aws_cdk.aws_iam import Role, PolicyDocument, ServicePrincipal, PolicyStatement, Effect, ManagedPolicy
@@ -47,6 +47,11 @@ class PollyStack(Stack):
                     fallback_origin=HttpOrigin(Fn.select(2, Fn.split("/", rustFunctionUrl.url))),
                     fallback_status_codes=[403]
                 ),
+                origin_request_policy=OriginRequestPolicy(
+                    self,
+                    "PollyRequestPolicy",
+                    query_string_behavior=OriginRequestQueryStringBehavior.allow_list("cache")
+                ),
                 viewer_protocol_policy=ViewerProtocolPolicy.HTTPS_ONLY
             ),
         )
@@ -65,7 +70,7 @@ class PollyStack(Stack):
     def createRustLambda(self, functionName):
         return Function(self, functionName,
             code=Code.from_asset('PollyFunction/target/lambda/PollyFunction'),
-            runtime=Runtime.PROVIDED_AL2,
+            runtime=Runtime.PROVIDED_AL2023,
             handler="empty",
             role=self.lambdaRole,
             timeout=Duration.seconds(10),
