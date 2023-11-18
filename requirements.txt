@@ -1,13 +1,13 @@
 attrs==22.2.0
-aws-cdk-lib==2.89.0
-aws-cdk.asset-awscli-v1==2.2.200
+aws-cdk-lib==2.110.0
+aws-cdk.asset-awscli-v1==2.2.201
 aws-cdk.asset-kubectl-v20==2.1.2
 aws-cdk.asset-node-proxy-agent-v5==2.0.166
 cattrs==22.2.0
 constructs==10.1.290
 exceptiongroup==1.1.1
 importlib-resources==5.12.0
-jsii==1.85.0
+jsii==1.91.0
 publication==0.0.3
 python-dateutil==2.8.2
 six==1.16.0
