@@ -35,7 +35,7 @@ async fn pollyHandler(pollyClient: &polly::Client, s3Client: &s3::Client, event:
 
     let resp;
 
-    if translation.chars().count() < 15 {
+    if translation.chars().count() < 25 {
         let mut now = Instant::now();
         let result = pollyClient.synthesize_speech()
             .engine(polly::types::Engine::Standard)
